@@ -4,7 +4,7 @@ from sys import argv
 
 infile = argv[1]
 outfile = argv[2]
-last_chr = ""
+last_chrom = ""
 
 print("Starting to concating per chromosome / scaffold...")
 
