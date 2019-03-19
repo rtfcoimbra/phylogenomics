@@ -1,31 +1,28 @@
 #!/bin/env python3
 
-from Bio import SeqIO
-from Bio.SeqRecord import SeqRecord
-from Bio.Seq import Seq
-from Bio.Alphabet import generic_dna
 from sys import argv
-import re
 
-infile=argv[1]
-outfile=argv[2]
-seqs = SeqIO.index(infile, "fasta")
-outseqs = []
-chr_ids = [record.split(":")[0] for record in seqs.keys()]
+infile = argv[1]
+outfile = argv[2]
+last_chr = ""
 
-for chr in sorted(set(chr_ids)):
-    matching_chr = [seqid for seqid in seqs.keys() if seqid.startswith("%s:"%chr)]
-    collect_sequences = [str(seqs[seqid].seq) for seqid in matching_chr]
-    chrseq = "".join(collect_sequences)
-    print(">%s" %chr)
-#    print(chrseq)
-    chrrecord = SeqRecord(Seq(chrseq, generic_dna),
-                          id="%s" %chr,
-                          description = "")
-    outseqs.append(chrrecord)
+print("Starting to concating per chromosome / scaffold...")
 
-SeqIO.write(outseqs, outfile, "fasta")
+with open(infile) as fin, open(outfile, "w") as fout:
+    for line in fin.readlines():
+        if line.startswith(">"):
+            chrom = line.strip().split(":")[0]
+            if not last_chrom:
+                fout.write("%s\n" % chrom)  # write header
+                print(chrom.replace(">", "..."))  # write status to stdout
+            elif chrom != last_chrom:
+                fout.write("\n%s\n" % chrom)  # write header
+                print(chrom.replace(">", "..."))  # write status to stdout
+            else:
+                pass
+        else:
+            fout.write(line.strip()) # write sequence
+        last_chrom = chrom
 
-
-
-
+print("Done.")
+# EOF
