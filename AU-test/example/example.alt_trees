@@ -1,0 +1,3 @@
+(Frog,((Turtle,Bird),Mouse),((Human,Cow),Whale));
+(Frog,((Turtle,Bird),Cow),((Human,Mouse),Whale));
+(Frog,((Turtle,Bird),Mouse),(Human,(Cow,Whale)));
