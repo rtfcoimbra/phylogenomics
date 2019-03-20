@@ -1,0 +1,8 @@
+((((Bmu,(Bbo01,Bbo02)), ((Bṕh03, Mno00),(Erob01,Erob02))), Bac00),(balMys, Egl00));
+(((((Bmu,(Bbo01,Bbo02)),(Erob01,Erob02)), (Bṕh03, Mno00)), Bac00),(balMys, Egl00));
+((((Bmu,(Bbo01,Bbo02)), (Bṕh03, Mno00)), Bac00, (Erob01,Erob02)),(balMys, Egl00));
+(((((Bmu,(Bbo01,Bbo02)), (Bṕh03, Mno00)), Bac00), (Erob01,Erob02)),(balMys, Egl00));
+(((((Bmu,(Bbo01,Bbo02)), Bac00), (Bṕh03, Mno00)), (Erob01,Erob02)),(balMys, Egl00));
+((((Bṕh03, Bmu),Egl00), (Erob01,Erob02)), balMys);
+
+

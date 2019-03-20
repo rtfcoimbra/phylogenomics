@@ -1,0 +1,47 @@
+SHELL:=/bin/bash
+
+all: \
+	10kb.test_topologies.out \
+	10kb.test_topologies.pAU_values 
+
+#	100kb.test_topologies.pAU_values \
+#	100kb.test_topologies.out \
+
+
+
+#100kb.random_trees_ln: ../gf_trees/100kb_fragments.raxml.all_trees.tre # ../gf_trees/all_trees.100kb.tre
+#	sed 's/\:[0-9][\.]*[a-z0-9]*[-]*[0-9]*//g' $<  | shuf -n 2000  | cut -f1 -d ":" > $@ # get line numbers
+
+100kb.random_fragments: ../100kb_fragments/*.fasta # ../gf_trees/all_trees.100kb.tre
+	ls $^ | shuf -n 2000 > $@
+
+10kb.random_fragments: ../2016-04-05/cephyr_fragments/subsampled_fragments_alltaxa/*.fasta # ../gf_trees/all_trees.100kb.tre
+	ls $^ | shuf -n 2000 > $@
+
+#10kb.random_fragments: ../10kb_fragments/*.fasta # ../gf_trees/all_trees.100kb.tre
+#	ls $^ | shuf -n 2000 > $@
+
+#200kb.random_trees_ln: ../gf_trees/100kb_fragments.raxml.all_trees.tre # ../gf_trees/all_trees.100kb.tre
+#	sed 's/\:[0-9][\.]*[a-z0-9]*[-]*[0-9]*//g' $<  | shuf -n 1500  | cut -f1 -d ":" > $@ # get line numbers
+
+#10kb.random_trees_ln: ../gf_trees/100kb_fragments.raxml.all_trees.tre # ../gf_trees/all_trees.10kb.tre
+#	sed 's/\:[0-9][\.]*[a-z0-9]*[-]*[0-9]*//g' $<  | shuf -n 2000 | cut -f1 -d ":" > $@ # get line numbers
+
+
+10kb.test_topologies.out: 10kb.random_fragments
+	./test_topologies.from_trees.sh $<  $@
+
+100kb.test_topologies.out: 100kb.random_fragments
+	./test_topologies.from_trees.sh $< $@
+
+200kb.test_topologies.out: 200kb.random_trees_ln
+	./test_topologies_catfragments.sh $< ../100kb_fragments $@
+
+%.test_topologies.pAU_values: %.test_topologies.out
+	echo -e "id\tpAU" > $@
+	grep -v "RAx" $< | sed '/^$$/d' >> $@
+
+
+#TREEFINDER STUFF
+#%.test_topologies.pAU_values: %.test_topolgies.out
+#	./parse_pAU.py $<  > $(subst .test_topologies.out,.test_topologies.pAU_values, $(<F))
