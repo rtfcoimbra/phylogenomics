@@ -1,0 +1,87 @@
+pAU values
+========================================================
+Compute ML trees with RAxML for 500 subsampled genome fragments. If the computed tree matched the consensus tree (species tree), the approximate unbiased (AU) tests how well this topology is supported in contrast to four alterantive hypothesis. AU test is done with CONSEL.
+
+## Changelog
+### 2016-11-30 - added grey whale, 20 and 100kb
+
+### 2015-11-29 - New RepeatMasking of reference genome
+
+References:
+ *A. Stamatakis: "RAxML Version 8: A tool for Phylogenetic Analysis and Post-Analysis of Large Phylogenies". In Bioinformatics, 2014*
+http://sco.h-its.org/exelixis/web/software/raxml/index.html
+
+*Shimodaira, H. & Hasegawa, M. CONSEL: for assessing the confidence of phylogenetic tree selection. Bioinformatics 17, 1246-1247 (2001).*
+http://www.sigmath.es.osaka-u.ac.jp/shimo-lab/prog/consel/
+
+```{r, engine='bash', echo=FALSE}
+
+grep -v "id" 10kb.test_topologies.pAU_values | awk 'BEGIN {i=0;j=0} {if(i % 6 == 0){j+=1; i==0}; print $1,$2,"fragment"j; i +=1}' > 10kb.test_topologies.2.pAU_values
+```
+
+
+### Load data 
+
+```{r, , echo=FALSE}
+
+library(ggplot2)
+library(grid)
+library(ape)
+setwd("~/cephyr/data/2016-11-07/pAU/")
+df100kb <-read.table("100kb.test_topologies.pAU_values", sep="\t", header=TRUE )
+df10kb <-read.delim("10kb.test_topologies.pAU_values", sep="\t", header=TRUE)
+df20kb <-read.table("20kb.test_topologies.pAU_values", sep="\t", header=TRUE)
+df10kb <- df10kb[complete.cases(df10kb), ]
+# df100kb <- df100kb[complete.cases(df100kb), ]
+tree_data <- data.frame(read.table("possible_trees", sep="\t"))
+colnames(tree_data) <- c("nwk")
+tree_data$id <- as.character(paste("top", seq(1,6), sep=""))
+tree_data$nwk <- as.character(tree_data$nwk)
+
+# The palette with black:
+cbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#0072B2", "#D55E00", "#CC79A7",  "#F0E442")
+```
+
+## Topologies tested
+(ordered from left to right)
+
+
+```{r, echo=FALSE}
+pdf(file="possible_trees.pdf", onefile=T, paper="a4")
+layout(matrix(1:6, 6, 1))
+op <- par(mfrow = c(1, 6), mai=rep(0,4), mar=rep(0,4)) # 2 x 2 pictures on one plot
+t <- read.tree(text=tree_data$nwk, tree.names=tree_data$id)[1]
+plot(t, layout=6,cex=1.2, type="u")
+#plot(t, layout=6, type="u")
+dev.off()
+
+
+
+```
+
+
+## Plot 10kb data
+
+```{r, echo=FALSE}
+p <- ggplot(df10kb, aes(x=id, y=pAU))
+ p +  geom_boxplot() + geom_hline(aes(yintercept=.95), color="green") + geom_hline(aes(yintercept=.05), color="red") +  stat_summary(fun.y=mean, colour="darkred", geom="point",              shape=18, size=3,show_guide = FALSE) + ylab("AU values") + xlab("Topology") + theme_classic() + 
+  theme(axis.text  = element_text(angle=0, vjust=0.5, size=12)) + ggtitle(paste("10kb GF, n=", nrow(df10kb)/6))
+  
+```
+
+## Plot 20kb data
+
+```{r, echo=FALSE}
+p <- ggplot(df20kb, aes(x=id, y=pAU))
+ p +  geom_boxplot() + geom_hline(aes(yintercept=.95), color="green") + geom_hline(aes(yintercept=.05), color="red") +  stat_summary(fun.y=mean, colour="darkred", geom="point",              shape=18, size=3,show_guide = FALSE) + ylab("AU values") + xlab("Topology") + theme_classic() + 
+  theme(axis.text  = element_text(angle=0, vjust=0.5, size=12))+ ggtitle(paste("20kb GF, n=", nrow(df20kb)/6))
+```
+
+## Plot 100kb data
+
+```{r, echo=FALSE}
+p <- ggplot(df100kb, aes(x=id, y=pAU))
+p +  geom_boxplot() + geom_hline(aes(yintercept=.95), color="green") + geom_hline(aes(yintercept=.05), color="red")+  stat_summary(fun.y=mean, colour="darkred", geom="point",              shape=18, size=3,show_guide = FALSE) + ylab("AU values") + xlab("Topology") + theme_classic() +  theme(axis.text  = element_text(angle=0, vjust=0.5, size=12)) + ggtitle(paste("100kb GF, n=", nrow(df100kb)/6))
+```
+
+
