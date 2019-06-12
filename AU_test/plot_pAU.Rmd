@@ -1,7 +1,7 @@
 Fragement size dependent pAU values (SIMULATION)
 ========================================================
 
-Genomic fragments were simulated from a real-data 100kb alignment of all 8 taxa, that returns the assumed species tree. 
+Genomic fragments were simulated from a real-data 100kb alignment of all 8 taxa, that returns the assumed species tree.
 Seq-Gen simulated 100 replicates for sizes from 1000 to 100,000 bb with an increment of 1000bp given the species tree.  AU values were calculated with RAxML (GTRGAMMA model) and CONSEL.
 
 Topologies are the same as for real-data AU test.
@@ -44,7 +44,7 @@ summarySE <- function(data=NULL, measurevar, groupvars=NULL, na.rm=FALSE,
     datac$se <- datac$sd / sqrt(datac$N)  # Calculate standard error of the mean
 
     # Confidence interval multiplier for standard error
-    # Calculate t-statistic for confidence interval: 
+    # Calculate t-statistic for confidence interval:
     # e.g., if conf.interval is .95, use .975 (above/below), and use df=N-1
     ciMult <- qt(conf.interval/2 + .5, datac$N-1)
     datac$ci <- datac$se * ciMult
@@ -55,15 +55,15 @@ summarySE <- function(data=NULL, measurevar, groupvars=NULL, na.rm=FALSE,
 
 
 
-# Load data 
+# Load data
 
 ```{r}
 library(ggplot2)
 library(grid)
-setwd("/home/newuser/cephyr/data/2016-11-08/seqgen/")
-df <-read.table("all_fragmens.fixed.pAU_values", sep="\t", header=TRUE)
+setwd("~/Downloads")
+df <-read.table("combined.au", sep="\t", header=TRUE)
 df$tree <- NULL
-colnames(df) <- c("id", "pAU", "frag_size")
+colnames(df) <- c("frag_size", "id", "pAU")
 
 df <- df[complete.cases(df),]
 df <- subset(df, df$id %in% c("top1","top2","top3","top4","top5", "top6"))
@@ -73,9 +73,9 @@ df.s <- summarySE(df, measurevar="pAU", groupvars=c("frag_size","id"))
 ```
 
 ```{r}
-
+library(viridis)
 # The palette with black:
-cbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#0072B2", "#D55E00", "#CC79A7",  "#F0E442")
+cbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#0072B2", "#D55E00", "#CC79A7", "#F0E442")
 
 # To use for fills, add
 #  scale_fill_manual(values=cbPalette)
@@ -87,11 +87,11 @@ cbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#0072B2", "#D55E00",
 
 When is significant rejection reached?
 ```{r}
-head(subset(df.s, id == "top1" & pAU+ci > 0.95))
-head(subset(df.s, id == "top2" & pAU+ci <= 0.05))
-head(subset(df.s, id == "top3" & pAU+ci <= 0.05))
-head(subset(df.s, id == "top4" & pAU+ci <= 0.05))
-head(subset(df.s, id == "top5" & pAU+ci <= 0.05))
+#head(subset(df.s, id == "top13" & pAU+ci > 0.95))
+#head(subset(df.s, id == "top1" & pAU+ci <= 0.05))
+#head(subset(df.s, id == "top2" & pAU+ci <= 0.05))
+#head(subset(df.s, id == "top7" & pAU+ci <= 0.05))
+#head(subset(df.s, id == "top8" & pAU+ci <= 0.05))
 
 ```
 
@@ -99,27 +99,33 @@ head(subset(df.s, id == "top5" & pAU+ci <= 0.05))
 
 ```{r, echo=FALSE, fig.width = 10, fig.height = 5}
 p <- ggplot(df.s, aes(color=id, x=frag_size, y=pAU))
-p + geom_line(size=1) + 
-  ylim(-0.1,1.05) + 
+p + geom_line(size=1) +
+  ylim(-0.1,1.05) +
   geom_errorbar(aes(ymin=pAU-ci, ymax=pAU+ci), width=.1) +
   geom_point() +
-  #ggtitle("Size dependet AU values + CI") + 
-  #geom_vline(xintercept=10000, color="darkgrey") + 
-  geom_hline(aes(yintercept=.95), color="green") + 
-  geom_hline(aes(yintercept=.05), color="red")  + 
-  ylab("AU values") + 
-  xlab("Fragment size") + 
-  theme_classic() + 
-  scale_colour_manual(values=cbPalette) + 
+  ggtitle("Size dependent AU values + CI") +
+  #geom_vline(xintercept=10000, color="darkgrey") +
+  geom_hline(aes(yintercept=.95), color="green", lty=2, lwd = 1.5) +
+  geom_hline(aes(yintercept=.05), color="red", lty=2, lwd = 1.5)  +
+  ylab("AU values") +
+  xlab("Fragment size") +
+  #theme_classic() +
+  scale_color_viridis(discrete = TRUE) +
+  #scale_colour_manual(values=cbPalette) +
   scale_linetype_discrete(name  = "id",
                         breaks=levels(df.s$id),
-                        labels=c("","Topology 1", "Topology 2", "Topology 3", "Topology 4", "Topology 5")) +
+                        labels=c("Topology 1", "Topology 2", "Topology 3",
+                                 "Topology 4", "Topology 5", "Topology 6",
+                                 "Topology 7", "Topology 8", "Topology 9",
+                                 "Topology 10", "Topology 11", "Topology 12",
+                                 "Topology 13", "Topology 14", "Topology 15")) +
   theme(axis.text  = element_text(angle=0, vjust=0.5, size=12),
-        legend.justification=c(1,0),
-        legend.position=c(1,.4),
+        legend.position="right",
+        legend.background = element_blank(),
+        legend.key = element_blank(),
         legend.text = element_text(size=10, face="bold"),
         legend.title = element_blank()
-        ) 
+        )
 
 ```
 
@@ -127,18 +133,18 @@ p + geom_line(size=1) +
 ```{r, echo=FALSE, fig.width = 10, fig.height = 5}
 df.s <- df.s[df.s$frag_size <=30000,]
 p <- ggplot(df.s, aes(color=id, x=frag_size, y=pAU))
-p + geom_line(size=1) + 
-  ylim(-0.1,1.05) + 
+p + geom_line(size=1) +
+  ylim(-0.1,1.05) +
   geom_errorbar(aes(ymin=pAU-ci, ymax=pAU+ci), width=.1) +
   geom_point() +
-  #ggtitle("Size dependet AU values + CI") + 
-  #geom_vline(xintercept=20000, color="darkgrey") + 
-  geom_hline(aes(yintercept=.95), color="green") + 
-  geom_hline(aes(yintercept=.05), color="red")  + 
-  ylab("AU values") + 
-  xlab("Fragment size") + 
-  theme_classic() + 
-  scale_colour_manual(values=cbPalette) + 
+  #ggtitle("Size dependet AU values + CI") +
+  #geom_vline(xintercept=20000, color="darkgrey") +
+  geom_hline(aes(yintercept=.95), color="green") +
+  geom_hline(aes(yintercept=.05), color="red")  +
+  ylab("AU values") +
+  xlab("Fragment size") +
+  theme_classic() +
+  scale_colour_manual(values=cbPalette) +
   scale_linetype_discrete(name  = "id",
                         breaks=levels(df.s$id),
                         labels=c("","Topology 1", "Topology 2", "Topology 3", "Topology 4", "Topology 5")) +
@@ -147,8 +153,6 @@ p + geom_line(size=1) +
         legend.position=c(1,.4),
         legend.text = element_text(size=10, face="bold"),
         legend.title = element_blank()
-        ) 
+        )
 
 ```
-
-
