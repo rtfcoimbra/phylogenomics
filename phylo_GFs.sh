@@ -12,9 +12,9 @@
 
 # find input FASTAs
 FASTAS=$(find $1 -name '*.clean.concat.fa' -printf '-f %p ')
-MIN=50000  # minimum fragment size
-MAX=500000  # maximum fragment size
-STEP=50000  # step of size increase in range of fragment sizes
+MIN=25000  # minimum fragment size
+MAX=250000  # maximum fragment size
+STEP=25000  # step of size increase in range of fragment sizes
 N_SAMPLES=500  # number of random fragments to sample
 
 # generate random genome fragments (GF) of different sizes
