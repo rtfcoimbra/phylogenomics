@@ -352,7 +352,7 @@ if __name__ == '__main__':
     if args.n_ratio and not args.clean:
         parser.error("argument -n/--n_ratio: requires -c/--clean.")
     # set error message for incorrect float value
-    if args.n_ratio != None:
+    if args.n_ratio is not None:
         if not 0 < args.n_ratio < 1:
             parser.error("argument -n/--n_ratio: value should be a float "
                          + "between, but not including, 0 and 1.")
