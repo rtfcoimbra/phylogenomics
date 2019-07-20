@@ -11,14 +11,14 @@
 # parallel
 # iqtree
 
-# path to file of tree topologies, if none is given AU test will be skipped
+# path to file of tree topologies, if none is given topology test will be skipped
 ALT_TREES=$(find .. -name 'topologies.tree' -printf '%p')
 
 echo "Tree reconstruction for $(basename $1) in progress..."
-echo "Approximately unbiased tree topology test for $(basename $1) in progress..."
+echo "Approximately unbiased (AU) tree topology test for $(basename $1) in progress..."
 
-# run IQ-TREE with ultrafast bootstrap, ultrafast model selection, and AU tree topology test
-iqtree -s $1 -o 'WOAK' -bb 1000 -nm 10000 -z $ALT_TREES -zb 10000 -au &&
+# perform AU tree topology test with 10000 replicates using ultrafast model selection
+iqtree -s $1 -o 'WOAK' -n 0 -z $ALT_TREES -zb 10000 -au &&
 
 # extract p-AU values from IQ-TREE's log file
 python parse_iqlog.py ${1}.log > ${1}.au
