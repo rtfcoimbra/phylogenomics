@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Usage: ./iqtree_AU_test.sh <input_file>
+# Usage: ./iqtree_au_test.sh <input_file>
 
-# Requirements: 'phylo_GFs.sh', 'genome_fragments.py', 'iqtree_parallel.sh',
-#               'iqtree_AU_test.sh', and 'parse_iqlog.py' must be in the same
+# Requirements: 'genome_fragments.py', 'iqtree_parallel.sh',
+#               'iqtree_au_test.sh', and 'parse_iqlog.py' must be in the same
 #               directory.
 
 # The following tools must be defined in $PATH:
