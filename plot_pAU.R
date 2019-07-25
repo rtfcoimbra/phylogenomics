@@ -40,7 +40,6 @@ summarySE <- function(data = NULL, measurevar, groupvars = NULL, na.rm = FALSE,
 # load libraries
 library(ggplot2)
 library(ggtree)
-library(viridis)
 
 # set up working directory
 setwd("~/Sync/rcoimbra_phd/results")
@@ -83,14 +82,15 @@ head(subset(df.s, id == "Top15" & pAU + ci <= 0.05))
 
 # plot pAU over fragment sizes
 ggplot(df.s, aes(color = id, x = frag_size, y = pAU)) +
-  geom_point(size = 1.2) +
-  geom_line(size = 0.6) +
-  geom_errorbar(aes(ymin = pAU - ci, ymax = pAU + ci), width = 0.08) +
+  geom_point(size = 1.1) +
+  geom_line(size = 0.5) +
+  geom_errorbar(aes(ymin = pAU - ci, ymax = pAU + ci), width = 0.05) +
   geom_hline(aes(yintercept = 0.95), color = "green", lty = 2) +
   geom_hline(aes(yintercept = 0.05), color = "red", lty = 2) +
   ylab("AU values") +
   xlab("Fragment size") +
-  scale_color_viridis(discrete = TRUE) +
+  scale_color_viridis_d() +
+  theme_classic() +
   theme(axis.title = element_text(size = 9),
         axis.text = element_text(size = 7),
         legend.position = "right",
