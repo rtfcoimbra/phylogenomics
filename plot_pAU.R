@@ -76,7 +76,7 @@ head(subset(df.s, id == "Top9" & pAU + ci <= 0.05))
 head(subset(df.s, id == "Top10" & pAU + ci <= 0.05))
 head(subset(df.s, id == "Top11" & pAU + ci <= 0.05))
 head(subset(df.s, id == "Top12" & pAU + ci <= 0.05))
-head(subset(df.s, id == "Top13" & pAU + ci > 0.95))
+head(subset(df.s, id == "Top13" & pAU - ci > 0.95))
 head(subset(df.s, id == "Top14" & pAU + ci <= 0.05))
 head(subset(df.s, id == "Top15" & pAU + ci <= 0.05))
 
@@ -90,6 +90,8 @@ ggplot(df.s, aes(color = id, x = frag_size, y = pAU)) +
   ylab("AU values") +
   xlab("Fragment size") +
   scale_color_viridis_d() +
+  scale_x_discrete(limit = c(seq(100000, 600000, 100000)),
+                   labels = c("100", "200", "300", "400", "500", "600")) +
   theme_classic() +
   theme(axis.title = element_text(size = 9),
         axis.text = element_text(size = 7),
