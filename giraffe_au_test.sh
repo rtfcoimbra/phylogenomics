@@ -138,6 +138,26 @@ cat check_gfs_450kp.jobs | parallel -j 20
 
 #
 
+# set up a variable for each (sub)species containing its representatives
+WA="WA720,WA733,WA746,WA806,WA808"
+KOR="GNP01,GNP04,GNP05,SNR2,ZNP01"
+NUB="ETH1,ETH2,ETH3,MF06,MF22,MF24"
+RET="ISC04,ISC08,RET1,RET3,RET4,RET5,RET6,RETRot1,RETRot2"
+TIP="MA1,SGR01,SGR05,SGR07,SGR13,SGR14"
+ANG="ENP11,ENP16,ENP19,ENP20,HNB102,HNB110"
+SA="BNP02,KKR01,KKR08,MTNP09,SUN3,V23"
+
+# create (sub)species assignment list
+cat <(echo "G.c.peralta:$WA")\
+    <(echo "G.c.antiquorum:$KOR")\
+    <(echo "G.c.camelopardalis:$NUB")\
+    <(echo "G.reticulata:$RET")\
+    <(echo "G.tippelskirchi):$TIP")\
+    <(echo "G.g.angolensis:$ANG")\
+    <(echo "G.g.giraffa:$SA")\
+    <(echo "Okapia_johnstoni:WOAK")\
+    > subspecies.assign
+
 # run Astral-III with gene trees generated from best GF size
 ASTRAL=/home/rcoimbra/software/astral/astral.5.6.3.jar
-java -jar $ASTRAL -i phylo-gftrees.tree -o astral.tree
+java -jar $ASTRAL -i phylo-gftrees.tree -a subspecies.assign -o astral.tree
