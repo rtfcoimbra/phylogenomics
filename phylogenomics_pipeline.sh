@@ -140,6 +140,30 @@ ls -v *.fa | parallel -j 30 "iqtree -s {} -o 'WOAK' -bb 1000"
 # collect gene trees
 cat $(find . -name '*.treefile') > GFs_450kbp.tree
 
-# run Astral-III with gene trees generated from best GF size
+# set path to Astral-III
 ASTRAL=/home/rcoimbra/software/astral/astral.5.6.3.jar
-java -jar $ASTRAL -i phylo-gftrees.tree -o astral.tree
+# run Astral-III with gene trees generated from best GF size
+java -jar $ASTRAL -i GFs_450kbp.tree -o astral.ind.tree 2> astral.ind.log
+
+# set up a variable for each (sub)species containing its representatives
+WA="WA720,WA733,WA746,WA806,WA808"
+KOR="GNP01,GNP04,GNP05,SNR2,ZNP01"
+NUB="ETH1,ETH2,ETH3,MF06,MF22,MF24"
+RET="ISC04,ISC08,RET1,RET3,RET4,RET5,RET6,RETRot1,RETRot2"
+MAS="MA1,SGR01,SGR05,SGR07,SGR13,SGR14"
+ANG="ENP11,ENP16,ENP19,ENP20,HNB102,HNB110"
+SA="BNP02,KKR01,KKR08,MTNP09,SUN3,V23"
+
+# create (sub)species assignment list
+cat <(echo "West_African:$WA")\
+    <(echo "Kordofan:$KOR")\
+    <(echo "Nubian:$NUB")\
+    <(echo "Reticulated:$RET")\
+    <(echo "Masai:$MAS")\
+    <(echo "Angolan:$ANG")\
+    <(echo "South_African:$SA")\
+    <(echo "Okapi:WOAK")\
+    > subspecies.list
+
+# run Astral-III with gene trees generated from best GF size (force subspecies)
+java -jar $ASTRAL -i GFs_450kbp.tree -a subspecies.list -o astral.spp.tree 2> astral.spp.log
