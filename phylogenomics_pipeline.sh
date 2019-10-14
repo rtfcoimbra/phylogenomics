@@ -143,7 +143,7 @@ cat $(find . -name '*.treefile') > GFs_450kbp.tree
 # set path to Astral-III
 ASTRAL=/home/rcoimbra/software/astral/astral.5.6.3.jar
 # run Astral-III with gene trees generated from best GF size
-java -jar $ASTRAL -i GFs_450kbp.tree -o astral.ind.tree 2> astral.ind.log
+java -jar $ASTRAL -i GFs_450kbp.tree -t 2 -o astral.ind.tree 2> astral.ind.log
 
 # set up a variable for each (sub)species containing its representatives
 WA="WA720,WA733,WA746,WA806,WA808"
@@ -166,4 +166,4 @@ cat <(echo "West_African:$WA")\
     > subspecies.list
 
 # run Astral-III with gene trees generated from best GF size (force subspecies)
-java -jar $ASTRAL -i GFs_450kbp.tree -a subspecies.list -o astral.spp.tree 2> astral.spp.log
+java -jar $ASTRAL -i GFs_450kbp.tree -a subspecies.list -t 2 -o astral.spp.tree 2> astral.spp.log
