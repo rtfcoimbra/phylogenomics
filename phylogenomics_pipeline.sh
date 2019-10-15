@@ -81,7 +81,7 @@ for SIZE in $(seq $MIN $STEP $MAX); do
   # calculate proportion of N's per sequence per GF and save separate lists of good and bad GFs
   for GF in $(ls -v *.fa); do
     # append command to a joblist
-    echo "sed '/^[^>]/ s/[^N]//gi; /^\s*$/d' $GF | python check_gfs.py $GF $SIZE 15 > ${GF/.fa/.percent_n}" >> check_gfs_${SIZE}bp.jobs
+    echo "sed '/^[^>]/ s/[^N]//gi; /^\s*$/d' $GF | python check_gfs.py $GF $SIZE $(grep -c '>' $GF) > ${GF/.fa/.percent_n}" >> check_gfs_${SIZE}bp.jobs
   done
   # run multiple instances of 'check_gfs.py' in parallel
   cat check_gfs_${SIZE}bp.jobs | parallel -j 10
@@ -138,32 +138,55 @@ cat check_gfs_450kb.jobs | parallel -j 20
 # perform ultrafast model selection followed by tree reconstruction with 1000 ultrafast bootstrap replicates
 ls -v *.fa | parallel -j 30 "iqtree -s {} -o 'WOAK' -bb 1000"
 # collect gene trees
-cat $(find . -name '*.treefile') > GFs_450kbp.tree
+cat $(find . -name '*.treefile') > estimated_gene_trees.tree
 
 # set path to Astral-III
 ASTRAL=/home/rcoimbra/software/astral/astral.5.6.3.jar
-# run Astral-III with gene trees generated from best GF size
-java -jar $ASTRAL -i GFs_450kbp.tree -t 2 -o astral.ind.tree 2> astral.ind.log
+# infer multispecies coalescent tree from gene trees generated with appropriate GF size
+java -jar $ASTRAL -i estimated_gene_trees.tree -t 2 -o estimated_species_tree.tree 2> astral.ind.log
 
 # set up a variable for each (sub)species containing its representatives
 WA="WA720,WA733,WA746,WA806,WA808"
 KOR="GNP01,GNP04,GNP05,SNR2,ZNP01"
-NUB="ETH1,ETH2,ETH3,MF06,MF22,MF24"
+NUB="ETH1,ETH2,ETH3"
+ROT="MF06,MF22,MF24"
 RET="ISC04,ISC08,RET1,RET3,RET4,RET5,RET6,RETRot1,RETRot2"
 MAS="MA1,SGR01,SGR05,SGR07,SGR13,SGR14"
-ANG="ENP11,ENP16,ENP19,ENP20,HNB102,HNB110"
 SA="BNP02,KKR01,KKR08,MTNP09,SUN3,V23"
+ANG="ENP11,ENP16,ENP19,ENP20,HNB102,HNB110"
 
 # create (sub)species assignment list
 cat <(echo "West_African:$WA")\
     <(echo "Kordofan:$KOR")\
     <(echo "Nubian:$NUB")\
+    <(echo "Rothschild:$ROT")\
     <(echo "Reticulated:$RET")\
     <(echo "Masai:$MAS")\
-    <(echo "Angolan:$ANG")\
     <(echo "South_African:$SA")\
+    <(echo "Angolan:$ANG")\
     <(echo "Okapi:WOAK")\
     > subspecies.list
 
-# run Astral-III with gene trees generated from best GF size (force subspecies)
-java -jar $ASTRAL -i GFs_450kbp.tree -a subspecies.list -t 2 -o astral.spp.tree 2> astral.spp.log
+# infer multispecies coalescent tree from gene trees generated with appropriate GF size (force subspecies)
+java -jar $ASTRAL -i estimated_gene_trees.tree -a subspecies.list -t 2 -o estimated_species_tree.tree 2> astral.spp.log
+
+# download 'annotation.txt', 'estimated_species_tree.tree', and 'estimated_gene_trees.tree' to local machine
+
+# create annotation file for DiscoVista
+find . -type f -name 'WA*.fa' -execdir sh -c 'printf "%s\tWest_African\n" "$(basename ${0%.clean.concat.fa})"' {} ';' >> annotation.txt
+find . -type f \( -name 'GNP*.fa' -o -name 'SNR*.fa' -o -name 'ZNP*.fa' \) -execdir sh -c 'printf "%s\tKordofan\n" "$(basename ${0%.clean.concat.fa})"' {} ';' >> annotation.txt
+find . -type f -name 'ETH*.fa' -execdir sh -c 'printf "%s\tNubian\n" "$(basename ${0%.clean.concat.fa})"' {} ';' >> annotation.txt
+find . -type f -name 'MF*.fa' -execdir sh -c 'printf "%s\tRothschild\n" "$(basename ${0%.clean.concat.fa})"' {} ';' >> annotation.txt
+find . -type f \( -name 'ISC*.fa' -o -name 'RET*.fa' \) ! -name 'ISC01*' -execdir sh -c 'printf "%s\tReticulated\n" "$(basename ${0%.clean.concat.fa})"' {} ';' >> annotation.txt
+find . -type f \( -name 'MA*.fa' -o -name 'SGR*.fa' \) -execdir sh -c 'printf "%s\tMasai\n" "$(basename ${0%.clean.concat.fa})"' {} ';' >> annotation.txt
+find . -type f \( -name 'BNP*.fa' -o -name 'KKR*.fa' -o -name 'MTNP*.fa' -o -name 'SUN*.fa' -o -name 'V23*.fa' \) -execdir sh -c 'printf "%s\tSouth_African\n" "$(basename ${0%.clean.concat.fa})"' {} ';' >> annotation.txt
+find . -type f \( -name 'ENP*.fa' -o -name 'HNB*.fa' \) -execdir sh -c 'printf "%s\tAngolan\n" "$(basename ${0%.clean.concat.fa})"' {} ';' >> annotation.txt
+echo -e "WOAK\tOutgroup" >> annotation.txt
+
+# calculate relative topology frequency analysis around focal branches
+docker run -v $(pwd):/data esayyari/discovista discoVista.py \
+  -a annotation.txt \
+  -m 5 \
+  -p . \
+  -o relative_freq \
+  -g Outgroup
