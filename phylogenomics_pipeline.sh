@@ -119,14 +119,6 @@ ls -v kordofan-giraffe_1mb_scaffolds.bed.* | parallel -j 10 "python genome_fragm
 # rename FASTA headers
 sed -Ei 's/\sScaffold_.*//g' *.fa
 
-Scaffold_6
-Scaffold_60
-Scaffold_4
-Scaffold_2
-Scaffold_1
-Scaffold_3
-Scaffold_0
-
 # calculate proportion of N's per sequence per GF and save separate lists of good and bad GFs
 for GF in $(ls -v *.fa); do
   # append command to a joblist
