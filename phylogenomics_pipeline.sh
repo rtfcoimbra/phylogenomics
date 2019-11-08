@@ -182,3 +182,19 @@ docker run -v $(pwd):/data esayyari/discovista discoVista.py \
   -p . \
   -o relative_freq \
   -g Outgroup
+
+echo -e "WA733\nWA808\nGNP01\nSNR2\nETH2\nMF06\nISC04\nRETRot2\nSGR05\nSGR14\nKKR08\nV23\nENP16\nENP19\nWOAK" > sample.ids
+ls *.fa | awk 'rand()<0.2' | parallel -j 20 'seqtk subseq {} sample.ids > {/.}_sampled.fa'
+ls *_sampled.fa | parallel -j 20 'python fasta2nexus_v2.py {}'
+sed -i 's/\<dna\>/& symbols="ACTG"/; /matrix/a [locus, 450000]' *.nex
+cat *.nex | sed '/^;/,/^matrix/d' | perl -pe 's/locus/$& . ++$n/ge' > multilocus.nex
+echo -e ";\nend;\n\nbegin phylonet;\nMCMC_SEQ -loci (locus1-locus10) -cl 5000000 -bl 1000000 -sf 5000 -pl 40 -mr 4 -tm <WestAfrican:WA733,WA808; Kordofan:GNP01,SNR2; Nubian:ETH2,MF06; Reticulated:ISC04,RETRot2; Masai:SGR05,SGR14; Southern:KKR08,V23,ENP16,ENP19; Okapi:WOAK> -diploid (WestAfrican, Kordofan, Nubian, Reticulated, Masai, Southern, Okapi);\nend;" >> multilocus.nex
+sed -ri 's/(nchar)=450000/\1=53550000/; s/interleave/interleave=yes/' multilocus.nex
+
+# create NEXUS input for PhyloNet
+cat <(echo -e "#NEXUS\n\nBEGIN TREES;") \
+    <(cat -n estimated_gene_trees.tree) \
+    <(echo -e "END;\n\nBEGIN PHYLONET;\nMCMC_GT (all) -cl 1000000 -bl 100000 -sf 1000 -mr 3 -pl 20 -tm <Northern:$WA,$KOR,$NUB,$ROT; Reticulated:$RET; Masai:$MAS; Southern:$SA,$ANG; Okapi:WOAK>;\nEND;") \
+  | sed -r 's/^\s+([0-9]+)\t/Tree gt\1 = /; s/\)[0-9]+:[0-9]\.[0-9]+/\)/g; s/:[0-9]\.[0-9]+//g' > test.nex
+
+java -jar /home/rcoimbra/software/PhyloNet_3.8.0.jar test.nex > phylonet.out
