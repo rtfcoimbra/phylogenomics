@@ -1,13 +1,11 @@
-import os.path
-import sys
 from Bio import SeqIO
 from Bio.Alphabet import IUPAC
+from os.path import basename
+from sys import argv
 
-infile = sys.argv[1]
-outfile = os.path.splitext(infile)[0] + '.nex'
+infile = argv[1]
+outfile = basename(infile).split('.')[0] + '.nex'
 
 with open(infile, 'rU') as fin:
     with open(outfile, 'w') as fout:
-        count = SeqIO.convert(fin, 'fasta', fout, 'nexus', alphabet=IUPAC.ambiguous_dna)
-
-print(f"Converted {count} records")
+        SeqIO.convert(fin, 'fasta', fout, 'nexus', alphabet=IUPAC.ambiguous_dna)
