@@ -103,7 +103,7 @@ cat $(ls -v *.au) | sed -r '2,$s/Fragment\tTopology\tpAU//g; /^\s*$/d' > combine
 
 
 ################################################################################
-#                          Whole-genome phylogenomics                          #
+#                         Multispecies coalescent tree                         #
 ################################################################################
 
 # BED file of scaffolds >= 1 Mb
@@ -183,18 +183,42 @@ docker run -v $(pwd):/data esayyari/discovista discoVista.py \
   -o relative_freq \
   -g Outgroup
 
+################################################################################
+#                        Multispecies coalescent network                       #
+################################################################################
+
+# set
+CHAIN_LEN=10000000
+BURNIN_LEN=2000000
+SAMPLE_FREQ=5000
+
+# create a list of sample names (the same individuals used in the AU test) for subsampling GF alignments
 echo -e "WA733\nWA808\nGNP01\nSNR2\nETH2\nMF06\nISC04\nRETRot2\nSGR05\nSGR14\nKKR08\nV23\nENP16\nENP19\nWOAK" > sample.ids
+# randomly sample 20% of all GFs and subsample alignment records to samples containted in 'sample.ids'
 ls *.fa | awk 'rand()<0.2' | parallel -j 20 'seqtk subseq {} sample.ids > {/.}_sampled.fa'
+# convert subsampled FASTAs to NEXUS format
 ls *_sampled.fa | parallel -j 20 'python fasta2nexus_v2.py {}'
+# add string for 'symbols' and locus information to NEXUS files
 sed -i 's/\<dna\>/& symbols="ACTG"/; /matrix/a [locus, 450000]' *.nex
-cat *.nex | sed '/^;/,/^matrix/d' | perl -pe 's/locus/$& . ++$n/ge' > multilocus.nex
-echo -e ";\nend;\n\nbegin phylonet;\nMCMC_SEQ -loci (locus1-locus10) -cl 5000000 -bl 1000000 -sf 5000 -pl 40 -mr 4 -tm <WestAfrican:WA733,WA808; Kordofan:GNP01,SNR2; Nubian:ETH2,MF06; Reticulated:ISC04,RETRot2; Masai:SGR05,SGR14; Southern:KKR08,V23,ENP16,ENP19; Okapi:WOAK> -diploid (WestAfrican, Kordofan, Nubian, Reticulated, Masai, Southern, Okapi);\nend;" >> multilocus.nex
-sed -ri 's/(nchar)=450000/\1=53550000/; s/interleave/interleave=yes/' multilocus.nex
+# concatenate and edit NEXUS files to a multilocus NEXUS for PhyloNet
+cat *.nex | sed '/^;/,/^matrix/d' | perl -pe 's/locus/$& . ++$n/ge' | sed '$a;\nend;\n' > multilocus.nex
+# add PhyloNet block to multilocus NEXUS file
+echo -e "begin phylonet;\nMCMC_SEQ -loci (all) -cl $CHAIN_LEN -bl $BURNIN_LEN -sf $SAMPLE_FREQ -pl 40 -mr 4 -tm <WestAfrican:WA733,WA808; Kordofan:GNP01,SNR2; Nubian:ETH2,MF06; Reticulated:ISC04,RETRot2; Masai:SGR05,SGR14; Southern:KKR08,V23,ENP16,ENP19; Okapi:WOAK> -diploid (WestAfrican, Kordofan, Nubian, Reticulated, Masai, Southern, Okapi);\nend;" >> multilocus.nex
+# correct 'nchar' string
+sed -ri 's/(nchar)=450000/\1=53550000/' multilocus.nex
+
+# infer multispecies coalescent network directly from subsampled GFs
+java -jar /home/rcoimbra/software/PhyloNet_3.8.0.jar multilocus.nex > mcmcseq.out
+
+# create a NEXUS file for summarizing the MCMC output from PhyloNet
+INFILE="/home/rcoimbra/phylogenomics/network/mcmcseq.out"
+RANK0_NETWORK=""
+echo -e "#NEXUS\nbegin sets;\n$INFILE\nend;\n\nbegin phylonet;\nSummarizeMCMCResults -cl $CHAIN_LEN -bl $BURNIN_LEN -sf $SAMPLE_FREQ -mode 'Tracer' -outfile 'report.txt' -truenet $RANK0_NETWORK;\nend;" > summarize_mcmc.nex
+# summarize the MCMC output
+java -jar /home/rcoimbra/software/PhyloNet_3.8.0.jar summarize_mcmc.nex
 
 # create NEXUS input for PhyloNet
 cat <(echo -e "#NEXUS\n\nBEGIN TREES;") \
     <(cat -n estimated_gene_trees.tree) \
     <(echo -e "END;\n\nBEGIN PHYLONET;\nMCMC_GT (all) -cl 1000000 -bl 100000 -sf 1000 -mr 3 -pl 20 -tm <Northern:$WA,$KOR,$NUB,$ROT; Reticulated:$RET; Masai:$MAS; Southern:$SA,$ANG; Okapi:WOAK>;\nEND;") \
   | sed -r 's/^\s+([0-9]+)\t/Tree gt\1 = /; s/\)[0-9]+:[0-9]\.[0-9]+/\)/g; s/:[0-9]\.[0-9]+//g' > test.nex
-
-java -jar /home/rcoimbra/software/PhyloNet_3.8.0.jar test.nex > phylonet.out
