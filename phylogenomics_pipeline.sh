@@ -201,11 +201,9 @@ ls *_sampled.fa | parallel -j 20 'python fasta2nexus_v2.py {}'
 # add string for 'symbols' and locus information to NEXUS files
 sed -i 's/\<dna\>/& symbols="ACTG"/; /matrix/a [locus, 450000]' *.nex
 # concatenate and edit NEXUS files to a multilocus NEXUS for PhyloNet
-cat *.nex | sed '/^;/,/^matrix/d' | perl -pe 's/locus/$& . ++$n/ge' | sed '$a;\nend;\n' > multilocus.nex
+cat *.nex | sed '/^;/,/^matrix/d' | perl -pe 's/locus/$& . ++$n/ge' | sed -r 's/(nchar)=450000/\1=53550000/' | sed '$a;\nend;\n' > multilocus.nex
 # add PhyloNet block to multilocus NEXUS file
-echo -e "begin phylonet;\nMCMC_SEQ -loci (all) -cl $CHAIN_LEN -bl $BURNIN_LEN -sf $SAMPLE_FREQ -pl 40 -mr 4 -tm <WestAfrican:WA733,WA808; Kordofan:GNP01,SNR2; Nubian:ETH2,MF06; Reticulated:ISC04,RETRot2; Masai:SGR05,SGR14; Southern:KKR08,V23,ENP16,ENP19; Okapi:WOAK> -diploid (WestAfrican, Kordofan, Nubian, Reticulated, Masai, Southern, Okapi);\nend;" >> multilocus.nex
-# correct 'nchar' string
-sed -ri 's/(nchar)=450000/\1=53550000/' multilocus.nex
+echo -e "begin phylonet;\nMCMC_SEQ -cl $CHAIN_LEN -bl $BURNIN_LEN -sf $SAMPLE_FREQ -mr 4 -tm <WestAfrican:WA733,WA808; Kordofan:GNP01,SNR2; Nubian:ETH2,MF06; Reticulated:ISC04,RETRot2; Masai:SGR05,SGR14; Southern:KKR08,V23,ENP16,ENP19; Okapi:WOAK> -diploid (WestAfrican, Kordofan, Nubian, Reticulated, Masai, Southern, Okapi);\nend;" >> multilocus.nex
 
 # infer multispecies coalescent network directly from subsampled GFs
 java -jar /home/rcoimbra/software/PhyloNet_3.8.0.jar multilocus.nex > mcmcseq.out
