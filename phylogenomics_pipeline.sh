@@ -135,45 +135,19 @@ cat $(find . -name '*.treefile') > estimated_gene_trees.tree
 # set path to Astral-III
 ASTRAL=/home/rcoimbra/software/astral/astral.5.6.3.jar
 # infer multispecies coalescent tree from gene trees generated with appropriate GF size
-java -jar $ASTRAL -i estimated_gene_trees.tree -t 2 -o estimated_species_tree.tree 2> astral.ind.log
-
-# set up a variable for each (sub)species containing its representatives
-WA="WA720,WA733,WA746,WA806,WA808"
-KOR="GNP01,GNP04,GNP05,SNR2,ZNP01"
-NUB="ETH1,ETH2,ETH3"
-ROT="MF06,MF22,MF24"
-RET="ISC04,ISC08,RET1,RET3,RET4,RET5,RET6,RETRot1,RETRot2"
-MAS="MA1,SGR01,SGR05,SGR07,SGR13,SGR14"
-SA="BNP02,KKR01,KKR08,MTNP09,SUN3,V23"
-ANG="ENP11,ENP16,ENP19,ENP20,HNB102,HNB110"
-
-# create (sub)species assignment list
-cat <(echo "West_African:$WA")\
-    <(echo "Kordofan:$KOR")\
-    <(echo "Nubian:$NUB")\
-    <(echo "Rothschild:$ROT")\
-    <(echo "Reticulated:$RET")\
-    <(echo "Masai:$MAS")\
-    <(echo "South_African:$SA")\
-    <(echo "Angolan:$ANG")\
-    <(echo "Okapi:WOAK")\
-    > subspecies.list
-
-# infer multispecies coalescent tree from gene trees generated with appropriate GF size (force subspecies)
-java -jar $ASTRAL -i estimated_gene_trees.tree -a subspecies.list -t 2 -o estimated_species_tree.tree 2> astral.spp.log
-
-# download 'annotation.txt', 'estimated_species_tree.tree', and 'estimated_gene_trees.tree' to local machine
+# obs.: do not change the names of the input files!
+java -jar $ASTRAL -i estimated_gene_trees.tree -o estimated_species_tree.tree 2> astral.log
 
 # create annotation file for DiscoVista
-find . -type f -name 'WA*.fa' -execdir sh -c 'printf "%s\tWest_African\n" "$(basename ${0%.clean.concat.fa})"' {} ';' >> annotation.txt
-find . -type f \( -name 'GNP*.fa' -o -name 'SNR*.fa' -o -name 'ZNP*.fa' \) -execdir sh -c 'printf "%s\tKordofan\n" "$(basename ${0%.clean.concat.fa})"' {} ';' >> annotation.txt
-find . -type f -name 'ETH*.fa' -execdir sh -c 'printf "%s\tNubian\n" "$(basename ${0%.clean.concat.fa})"' {} ';' >> annotation.txt
-find . -type f -name 'MF*.fa' -execdir sh -c 'printf "%s\tRothschild\n" "$(basename ${0%.clean.concat.fa})"' {} ';' >> annotation.txt
-find . -type f \( -name 'ISC*.fa' -o -name 'RET*.fa' \) ! -name 'ISC01*' -execdir sh -c 'printf "%s\tReticulated\n" "$(basename ${0%.clean.concat.fa})"' {} ';' >> annotation.txt
-find . -type f \( -name 'MA*.fa' -o -name 'SGR*.fa' \) -execdir sh -c 'printf "%s\tMasai\n" "$(basename ${0%.clean.concat.fa})"' {} ';' >> annotation.txt
-find . -type f \( -name 'BNP*.fa' -o -name 'KKR*.fa' -o -name 'MTNP*.fa' -o -name 'SUN*.fa' -o -name 'V23*.fa' \) -execdir sh -c 'printf "%s\tSouth_African\n" "$(basename ${0%.clean.concat.fa})"' {} ';' >> annotation.txt
-find . -type f \( -name 'ENP*.fa' -o -name 'HNB*.fa' \) -execdir sh -c 'printf "%s\tAngolan\n" "$(basename ${0%.clean.concat.fa})"' {} ';' >> annotation.txt
+find $DIR -type f -name 'WA*.fa' -execdir sh -c 'printf "%s\tWest_African\n" "$(basename ${0%.clean.concat.fa})"' {} ';' >> annotation.txt
+find $DIR -type f \( -name 'GNP*.fa' -o -name 'SNR*.fa' -o -name 'ZNP*.fa' \) -execdir sh -c 'printf "%s\tKordofan\n" "$(basename ${0%.clean.concat.fa})"' {} ';' >> annotation.txt
+find $DIR -type f \( -name 'ETH*.fa' -o -name 'MF*.fa' \) -execdir sh -c 'printf "%s\tNubian\n" "$(basename ${0%.clean.concat.fa})"' {} ';' >> annotation.txt
+find $DIR -type f \( -name 'ISC*.fa' -o -name 'RET*.fa' \) ! -name 'ISC01*' -execdir sh -c 'printf "%s\tReticulated\n" "$(basename ${0%.clean.concat.fa})"' {} ';' >> annotation.txt
+find $DIR -type f \( -name 'MA*.fa' -o -name 'SGR*.fa' \) -execdir sh -c 'printf "%s\tMasai\n" "$(basename ${0%.clean.concat.fa})"' {} ';' >> annotation.txt
+find $DIR -type f \( -name 'BNP*.fa' -o -name 'KKR*.fa' -o -name 'MTNP*.fa' -o -name 'SUN*.fa' -o -name 'V23*.fa' -o -name 'ENP*.fa' -o -name 'HNB*.fa' \) -execdir sh -c 'printf "%s\tSouthern\n" "$(basename ${0%.clean.concat.fa})"' {} ';' >> annotation.txt
 echo -e "WOAK\tOutgroup" >> annotation.txt
+
+# download 'annotation.txt', 'estimated_species_tree.tree', and 'estimated_gene_trees.tree' to local machine
 
 # calculate relative topology frequency analysis around focal branches
 docker run -v $(pwd):/data esayyari/discovista discoVista.py \
@@ -182,6 +156,27 @@ docker run -v $(pwd):/data esayyari/discovista discoVista.py \
   -p . \
   -o relative_freq \
   -g Outgroup
+
+# set up a variable for each (sub)species containing its representatives
+WA="WA720,WA733,WA746,WA806,WA808"
+KOR="GNP01,GNP04,GNP05,SNR2,ZNP01"
+NUB="ETH1,ETH2,ETH3,MF06,MF22,MF24"
+RET="ISC04,ISC08,RET1,RET3,RET4,RET5,RET6,RETRot1,RETRot2"
+MAS="MA1,SGR01,SGR05,SGR07,SGR13,SGR14"
+SOU="BNP02,KKR01,KKR08,MTNP09,SUN3,V23,ENP11,ENP16,ENP19,ENP20,HNB102,HNB110"
+
+# create (sub)species assignment list
+cat <(echo "West_African:$WA")\
+    <(echo "Kordofan:$KOR")\
+    <(echo "Nubian:$NUB")\
+    <(echo "Reticulated:$RET")\
+    <(echo "Masai:$MAS")\
+    <(echo "Southern:$SOU")\
+    <(echo "Okapi:WOAK")\
+    > subspecies.list
+
+# infer multispecies coalescent tree from gene trees generated with appropriate GF size (force subspecies)
+java -jar $ASTRAL -i estimated_gene_trees.tree -a subspecies.list -t 2 -o estimated_species_tree.spp.tree 2> astral.spp.log
 
 ################################################################################
 #                        Multispecies coalescent network                       #
