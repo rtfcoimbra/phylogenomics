@@ -182,11 +182,6 @@ java -jar $ASTRAL -i estimated_gene_trees.tree -a subspecies.list -t 2 -o estima
 #                        Multispecies coalescent network                       #
 ################################################################################
 
-# set
-CHAIN_LEN=10000000
-BURNIN_LEN=2000000
-SAMPLE_FREQ=5000
-
 # create a list of sample names (the same individuals used in the AU test) for subsampling GF alignments
 echo -e "WA733\nWA808\nGNP01\nSNR2\nETH2\nMF06\nISC04\nRETRot2\nSGR05\nSGR14\nKKR08\nV23\nENP16\nENP19\nWOAK" > sample.ids
 # randomly sample 20% of all GFs and subsample alignment records to samples containted in 'sample.ids'
@@ -198,7 +193,7 @@ sed -i 's/\<dna\>/& symbols="ACTG"/; /matrix/a [locus, 450000]' *.nex
 # concatenate and edit NEXUS files to a multilocus NEXUS for PhyloNet
 cat *.nex | sed '/^;/,/^matrix/d' | perl -pe 's/locus/$& . ++$n/ge' | sed -r 's/(nchar)=450000/\1=53550000/' | sed '$a;\nend;\n' > multilocus.nex
 # add PhyloNet block to multilocus NEXUS file
-echo -e "begin phylonet;\nMCMC_SEQ -cl $CHAIN_LEN -bl $BURNIN_LEN -sf $SAMPLE_FREQ -mr 4 -tm <WestAfrican:WA733,WA808; Kordofan:GNP01,SNR2; Nubian:ETH2,MF06; Reticulated:ISC04,RETRot2; Masai:SGR05,SGR14; Southern:KKR08,V23,ENP16,ENP19; Okapi:WOAK> -diploid (WestAfrican, Kordofan, Nubian, Reticulated, Masai, Southern, Okapi);\nend;" >> multilocus.nex
+echo -e "begin phylonet;\nMCMC_SEQ -cl 55000000 -bl 5000000 -sf 5000 -mr 4 -pl 60 -tm <WestAfrican:WA733,WA808; Kordofan:GNP01,SNR2; Nubian:ETH2,MF06; Reticulated:ISC04,RETRot2; Masai:SGR05,SGR14; Southern:KKR08,V23,ENP16,ENP19; Okapi:WOAK> -diploid (WestAfrican, Kordofan, Nubian, Reticulated, Masai, Southern, Okapi);\nend;" >> multilocus.nex
 
 # infer multispecies coalescent network directly from subsampled GFs
 java -jar /home/rcoimbra/software/PhyloNet_3.8.0.jar multilocus.nex > mcmcseq.out
@@ -206,7 +201,7 @@ java -jar /home/rcoimbra/software/PhyloNet_3.8.0.jar multilocus.nex > mcmcseq.ou
 # create a NEXUS file for summarizing the MCMC output from PhyloNet
 INFILE="/home/rcoimbra/phylogenomics/network/mcmcseq.out"
 RANK0_NETWORK="$(grep -Po 'Rank\s=\s0;.*MAP\s=.*:\K\(.*\);?(?=\sAve=.*)' $INFILE)"
-echo -e "#NEXUS\n\nbegin sets;\n$INFILE\nend;\n\nbegin phylonet;\nSummarizeMCMCResults -cl $CHAIN_LEN -bl $BURNIN_LEN -sf $SAMPLE_FREQ -mode \"Tracer\" -outfile \"report.txt\" -truenet \"$RANK0_NETWORK\";\nend;" > summarize_mcmc.nex
+echo -e "#NEXUS\n\nbegin sets;\n$INFILE\nend;\n\nbegin phylonet;\nSummarizeMCMCResults -cl 55000000 -bl 5000000 -sf 5000 -mode \"Tracer\" -outfile \"report.txt\" -truenet \"$RANK0_NETWORK\";\nend;" > summarize_mcmc.nex
 # summarize the MCMC output
 java -jar /home/rcoimbra/software/PhyloNet_3.8.0.jar summarize_mcmc.nex
 
