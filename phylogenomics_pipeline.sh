@@ -205,8 +205,8 @@ java -jar /home/rcoimbra/software/PhyloNet_3.8.0.jar multilocus.nex > mcmcseq.ou
 
 # create a NEXUS file for summarizing the MCMC output from PhyloNet
 INFILE="/home/rcoimbra/phylogenomics/network/mcmcseq.out"
-RANK0_NETWORK=""
-echo -e "#NEXUS\nbegin sets;\n$INFILE\nend;\n\nbegin phylonet;\nSummarizeMCMCResults -cl $CHAIN_LEN -bl $BURNIN_LEN -sf $SAMPLE_FREQ -mode 'Tracer' -outfile 'report.txt' -truenet $RANK0_NETWORK;\nend;" > summarize_mcmc.nex
+RANK0_NETWORK="$(grep -Po 'Rank\s=\s0;.*MAP\s=.*:\K\(.*\);?(?=\sAve=.*)' $INFILE)"
+echo -e "#NEXUS\n\nbegin sets;\n$INFILE\nend;\n\nbegin phylonet;\nSummarizeMCMCResults -cl $CHAIN_LEN -bl $BURNIN_LEN -sf $SAMPLE_FREQ -mode \"Tracer\" -outfile \"report.txt\" -truenet \"$RANK0_NETWORK\";\nend;" > summarize_mcmc.nex
 # summarize the MCMC output
 java -jar /home/rcoimbra/software/PhyloNet_3.8.0.jar summarize_mcmc.nex
 
