@@ -11,18 +11,25 @@ setwd("~/Downloads")
 gene.trees <- read.tree("./estimated_gene_trees.tree")
 # import species tree
 species.tree <- read.tree("./estimated_species_tree.tree")
-
 # create consensus network
-cnet <- consensusNet(gene.trees, 0.1)
-# show frequencies of bipartitions found in the gene trees mapped on the corresponding edge bundles of the network
-freq.bipart <- addConfidences(cnet, as.splits(gene.trees))
+cnet <- consensusNet(gene.trees, 0.15)
 # find edges that are in the network but not in the tree
-edge.col <- createLabel(freq.bipart, species.tree, label = "black", "edge", nomatch = "#F8766D")
-# set plot parameters
-par(mar = c(1, 1, 1, 1))
-# plot consensus network with edge labels
-cnet.freq <- plot(freq.bipart, "2D", show.edge.label = TRUE, edge.color = edge.col, col.edge.label = "#00BFC4", cex = 0.7)
-# write to SplitsTree for viewing
+edge.col <- createLabel(cnet, species.tree, label = "black", "edge", nomatch = "grey")
+# set plot margins
+par(mar = c(0, 0, 0, 0))
+# plot consensus network and map bipartition frequencies from a sample of trees onto corresponding network edges
+cnet.freq <- plot(cnet,
+                  type = "3D",
+                  #use.edge.length = FALSE,
+                  show.edge.label = TRUE,
+                  edge.label = round(as.numeric(cnet$edge.labels) * 0.01, 2),
+                  edge.color = edge.col,
+                  font = 1,
+                  cex = 0.7,
+                  font.edge.label = 2,
+                  cex.edge.label = 0.9,
+                  col.edge.label = "blue")
+# write nexus file for SplitsTree
 write.nexus.networx(cnet.freq,"consensus_network.freq.nex")
 
 # identify edge bundles (in black) in the consensus network that correspond to branches in the species tree
@@ -37,12 +44,3 @@ write.nexus.networx(cnet.freq,"consensus_network.freq.nex")
 #edge.col <- createLabel(cnet, species.tree, "black", nomatch = "red")
 # plot consensus network with edge labels
 #plot(cnet, edge.label = edge.lab, show.edge.label = T, "2D", edge.color = edge.col, col.edge.label = "blue", cex = 0.7)
-
-# show support values for all branches in the species tree mapped on the corresponding edge bundles of the network
-#sup.values <- addConfidences(cnet, species.tree)
-# find splits that are in the network but not in the tree
-#split.col <- createLabel(sup.values, species.tree, label = "black", "split", nomatch = "grey")
-# plot consensus network with edge labels
-#cnet.sup <- plot(sup.values, "2D", show.edge.label = TRUE, split.color = split.col, col.edge.label = "blue")
-# write to SplitsTree for viewing
-#write.nexus.networx(cnet.sup,"consensus_network.sup.nex")
