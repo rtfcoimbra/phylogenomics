@@ -52,7 +52,7 @@ ggtree(trees, ladderize = TRUE, right = TRUE) +
   geom_tiplab(size = 2.75) +
   ggplot2::xlim(0, 6.25) #+ theme(strip.background = element_blank())
 # save plot in '.pdf' format
-ggsave("./au_test/topologies.pdf", width = 170, height = 257, units = "mm")
+ggsave("./au_test/topologies.pdf", width = 210, height = 257, units = "mm")
 
 # read input
 df <- read.table("./au_test/combined.au", sep = "\t", header = TRUE)
@@ -62,6 +62,12 @@ colnames(df) <- c("frag_size", "id", "pAU")
 df <- df[complete.cases(df), ]
 # obtain summary statistics with custom function
 df.s <- summarySE(df, measurevar = "pAU", groupvars = c("frag_size", "id"))
+# fix order of topology ID's
+df.s$id <- factor(df.s$id, levels = c("Top1", "Top2", "Top3",
+                                      "Top4", "Top5", "Top6",
+                                      "Top7", "Top8", "Top9",
+                                      "Top10", "Top11", "Top12",
+                                      "Top13", "Top14", "Top15"))
 
 # show when significant rejection is reached
 head(subset(df.s, id == "Top1" & pAU + ci <= 0.05))
@@ -89,7 +95,7 @@ ggplot(df.s, aes(color = id, x = frag_size, y = pAU)) +
   geom_hline(aes(yintercept = 0.05), color = "red", lty = 2) +
   ylab("AU values") +
   xlab("Fragment size") +
-  scale_color_viridis_d() +
+  scale_color_viridis_d(direction = -1) +
   scale_x_discrete(limit = c(seq(100000, 600000, 100000)),
                    labels = c("100", "200", "300", "400", "500", "600")) +
   theme_classic() +
